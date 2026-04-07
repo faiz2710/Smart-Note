@@ -15,7 +15,15 @@ export default function RootLayout() {
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack>
+        <Stack.Screen name="login" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="register" options={{ headerShown: false }} />
+        <Stack.Screen name="profile" options={{ headerShown: false }} />
+        <Stack.Screen name="favorite" options={{ headerShown: false }} />
+        <Stack.Screen name="archive" options={{ headerShown: false }} />
+        <Stack.Screen name="trash" options={{ headerShown: false }} />
+        <Stack.Screen name="pengaturan" options={{ headerShown: false }} />
+        <Stack.Screen name="writenote" options={{ headerShown: false }} />
         <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
       </Stack>
       <StatusBar style="auto" />

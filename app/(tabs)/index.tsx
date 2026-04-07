@@ -1,98 +1,182 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import NoteCard, { Note } from "@/components/NoteCard";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { router, useFocusEffect } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import React, { useCallback, useState } from "react";
+import {
+  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+export default function Home() {
+  const [notes, setNotes] = useState<Note[]>([]);
 
-export default function HomeScreen() {
+  const loadNotes = async () => {
+    try {
+      const storedNotes = await AsyncStorage.getItem("@smartnote_notes");
+      if (storedNotes) {
+        setNotes(JSON.parse(storedNotes));
+      } else {
+        setNotes([]);
+      }
+    } catch (error) {
+      console.error("Gagal load catatan:", error);
+    }
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      loadNotes();
+    }, [])
+  );
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.container}>
+        
+        {/* HEADER */}
+        <View style={styles.header}>
+          <TouchableOpacity>
+            <Ionicons name="menu-outline" size={24} color="#111" />
+          </TouchableOpacity>
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+          <Text style={styles.brandTitle}>SmartNote</Text>
+
+          <TouchableOpacity style={styles.avatarBtn}>
+            <Ionicons name="person-outline" size={20} color="#555" />
+          </TouchableOpacity>
+        </View>
+
+        {/* TITLE */}
+        <View style={styles.titleSection}>
+          <Text style={styles.pageTitle}>Catatanku</Text>
+          <Text style={styles.pageSubtitle}>
+            You have {notes.length} active thoughts today.
+          </Text>
+        </View>
+
+        {/* LIST CATATAN */}
+        <FlatList
+          data={notes}
+          keyExtractor={(item) => item.id}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.listContainer}
+          renderItem={({ item }) => (
+            <NoteCard
+              note={item}
+              onPress={() => {
+                console.log("Card ditekan:", item.title);
+              }}
+            />
+          )}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>Belum ada catatan.</Text>
+              <Text style={styles.emptySubtext}>
+                Tekan tombol + di bawah untuk membuat catatan baru.
+              </Text>
+            </View>
+          }
+        />
+
+        {/* FAB */}
+        <TouchableOpacity
+          style={styles.fab}
+          activeOpacity={0.85}
+          onPress={() => router.push("./writenote")}
+        >
+          <Ionicons name="add" size={26} color="#fff" />
+        </TouchableOpacity>
+
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#f4f6f9",
   },
-  stepContainer: {
-    gap: 8,
+  container: {
+    flex: 1,
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 12,
+  },
+  brandTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#2563eb",
+  },
+  avatarBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: "#d0d8e8",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  titleSection: {
+    marginBottom: 24,
+    paddingHorizontal: 20,
+  },
+  pageTitle: {
+    fontSize: 40,
+    fontWeight: "800",
+    color: "#1f2933",
     marginBottom: 8,
+    letterSpacing: -1,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  pageSubtitle: {
+    fontSize: 14,
+    color: "#6b7280",
+  },
+  listContainer: {
+    paddingHorizontal: 20,
+    paddingBottom: 130,
+  },
+  emptyContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 60,
+  },
+  emptyText: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#9ca3af",
+    marginTop: 16,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: "#9ca3af",
+    marginTop: 8,
+    textAlign: "center",
+  },
+  fab: {
+    position: "absolute",
+    bottom: 120,
+    right: 24,
+    width: 58,
+    height: 58,
+    borderRadius: 29,
+    backgroundColor: "#2563eb",
+    alignItems: "center",
+    justifyContent: "center",
+
+    shadowColor: "#2563eb",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    elevation: 6,
   },
 });
